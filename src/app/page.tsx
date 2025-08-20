@@ -1,103 +1,268 @@
-import Image from "next/image";
+"use client";
 
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Pane } from "tweakpane";
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // const paneContainer = document.createElement('div');
+  //   paneContainer.style.position = 'absolute';
+  //   paneContainer.style.top = '20px';
+  //   paneContainer.style.right = '20px';
+  //   paneContainer.style.zIndex = '9999';
+  //   document.body.appendChild(paneContainer);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    (async function () {
+      const pane = new Pane();
+
+      //*creating scene ANCHOR
+      const scene = new THREE.Scene();
+
+      //*custom Geometry ANCHOR
+      const vertices = new Float32Array([0, 0, 1, 0, 2, 0, 2, 0, 0]);
+      const bufferAttribute = new THREE.BufferAttribute(vertices, 3);
+      const triangleGeometry = new THREE.BufferGeometry();
+      triangleGeometry.setAttribute("position", bufferAttribute);
+
+      //*Axis helper ANCHOR
+      // const axisHelper = new THREE.AxesHelper(2);
+      // scene.add(axisHelper);
+
+      //*TEXTURE LOADER ANCHOR
+      const textureLoader = new THREE.TextureLoader();
+
+      //*INITIALIZE TEXTURE ANCHOR
+      const spaceNormal = textureLoader.load(
+        "/textures/space/space/space-cruiser-panels2_normal-ogl.png"
+      );
+      const spaceAo = textureLoader.load(
+        "/textures/space/space/space-cruiser-panels2_ao.png"
+      );
+      const spaceAlbedo = textureLoader.load(
+        "/textures/space/space/space-cruiser-panels2_albedo.png"
+      );
+      const spaceHeight = textureLoader.load(
+        "/textures/space/space/space-cruiser-panels2_height.png"
+      );
+      const spaceMetal = textureLoader.load(
+        "/textures/space/space/space-cruiser-panels2_metallic.png"
+      );
+      const spaceRoughness = textureLoader.load(
+        "/textures/space/space/space-cruiser-panels2_roughness.png"
+      );
+      // spaceAo.repeat.set(4,2);
+      // spaceAo.wrapT = THREE.RepeatWrapping;
+      // spaceAo.wrapS = THREE.RepeatWrapping;
+
+      // spacePreview.wrapT = THREE.MirroredRepeatWrapping
+      // spacePreview.wrapS = THREE.MirroredRepeatWrapping
+      //*creating Geometry and Material ANCHOR
+      // const cubeGeometry = new THREE.BoxGeometry(1,1,1,2,2,2);
+      // const cubeMaterial =  new THREE.MeshBasicMaterial({color:"green",wireframe:true});
+      const sphereGeometry = new THREE.SphereGeometry(1, 66, 66);
+      const sphereMaterial = new THREE.MeshStandardMaterial({
+        color: "white",
+        wireframe: false,
+      });
+      const torusGeometry1 = new THREE.TorusGeometry(10, 1, 30, 200);
+      const torusGeometry2 = new THREE.TorusGeometry(10, 1, 30, 200);
+      const torusMaterial = new THREE.MeshStandardMaterial({
+        color:0xffd700,
+        wireframe: false,
+      });
+
+      //*FOG ANCHOR
+      const fog = new THREE.Fog("white", 20, 70);
+      scene.fog = fog;
+
+      //*SCENE BACKGROUND ANCHOR
+      scene.background = new THREE.Color("black");
+
+      //*changing material properties
+      torusMaterial.side = 2;
+      sphereMaterial.side = 2;
+      torusMaterial.roughness = 0.3;
+      torusMaterial.metalness = 1.08;
+      
+      sphereMaterial.map = spaceAlbedo;
+      sphereMaterial.aoMap = spaceAo;
+      sphereMaterial.displacementMap = spaceHeight;
+      sphereMaterial.normalMap = spaceNormal;
+      sphereMaterial.metalnessMap = spaceMetal;
+      sphereMaterial.roughnessMap = spaceRoughness;
+      sphereMaterial.metalness = 1;
+      sphereMaterial.displacementBias = 5;
+
+      //! PANE USAGE
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const spherePane = (pane as any).addFolder({
+        title: "Sphere Material",
+        expanded: true,
+      });
+      spherePane.addBinding(sphereMaterial, "roughness", {
+        min: 0,
+        max: 3,
+        step: 0.0000001,
+      });
+      spherePane.addBinding(sphereMaterial, "displacementBias", {
+        min: 0,
+        max: 10,
+        step: 0.001,
+      });
+      spherePane.addBinding(sphereMaterial, "metalness", {
+        min: 0,
+        max: 2,
+        step: 0.000001,
+      });
+      
+      //! PANE USAGE
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const torusPane = (pane as any).addFolder({
+        title: "Torus Material",
+        expanded: true,
+      }); 
+      torusPane.addBinding(torusMaterial, "roughness", {
+        min: 0,
+        max: 3,
+        step: 0.0000001,
+      });
+      torusPane.addBinding(torusMaterial, "color");
+      torusPane.addBinding(torusMaterial, "metalness", {
+        min: 0,
+        max: 2,
+        step: 0.000001,
+      });
+
+
+      //*creating Mesh
+      // const cubeMesh = new THREE.Mesh(
+      //   cubeGeometry,//ANCHOR
+      //   // triangleGeometry,//ANCHOR
+      //   cubeMaterial
+      // );
+
+      const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      const torusMesh1 = new THREE.Mesh(torusGeometry1, torusMaterial);
+      const torusMesh2 = new THREE.Mesh(torusGeometry2, torusMaterial);
+      sphereMesh.rotation.x = THREE.MathUtils.degToRad(90);
+      torusMesh2.rotation.x = THREE.MathUtils.degToRad(90);
+      //*LIGHT ANCHOR
+      const light = new THREE.AmbientLight("0xffffff", 2);
+      scene.add(light);
+
+      const pointLight1 = new THREE.PointLight("0xffffff", 20);
+      const pointLight2 = new THREE.PointLight("0xffffff", 20);
+      const pointLight3 = new THREE.PointLight("0xffffff", 20);
+      const pointLight4 = new THREE.PointLight("0xffffff", 20);
+      const pointLight5 = new THREE.PointLight("0xffffff", 20);
+      const pointLight6 = new THREE.PointLight("0xffffff", 20);
+      const pointLight7 = new THREE.PointLight("0xffffff", 20);
+      const pointLight8 = new THREE.PointLight("0xffffff", 20);
+      pointLight1.position.set(8, 8, 8);
+      pointLight2.position.set(-8, 8, 8);
+      pointLight3.position.set(8, -8, 8);
+      pointLight4.position.set(8, 8, -8);
+      pointLight5.position.set(8, -8, -8);
+      pointLight6.position.set(-8, -8, 8);
+      pointLight7.position.set(-8, 8, -8);
+      pointLight8.position.set(-8, -8, -8);
+      scene.add(pointLight1);
+      scene.add(pointLight2);
+      scene.add(pointLight3);
+      scene.add(pointLight4);
+      scene.add(pointLight5);
+      scene.add(pointLight6);
+      scene.add(pointLight7);
+      scene.add(pointLight8);
+      // const axisHelper2 = new THREE.AxesHelper(2);//ANCHOR
+      // cubeMesh.add(axisHelper2);//ANCHOR
+
+      // cubeMesh.position.set(0,1,0);//ANCHOR
+
+      //* adding mesh to scene ANCHOR
+      // scene.add(cubeMesh);//ANCHOR
+      scene.add(sphereMesh);
+      scene.add(torusMesh1, torusMesh2);
+
+      //*creating perspective Camera ANCHOR
+      const camera = new THREE.PerspectiveCamera(
+        80,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      //*creating perspective Camera ANCHOR
+      // const aspectRatio = window.innerWidth/window.innerHeight;TODO:
+      // const camera = new THREE.OrthographicCamera(-1*aspectRatio,1*aspectRatio,1,-1,0.1,200)TODO:
+
+      //*position of camera ANCHOR
+      camera.position.z = 20;
+      camera.position.y = 1;
+
+      //?  scene.add(camera)  ANCHOR we can also do it for object POV
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current ? canvasRef.current : undefined,
+        antialias: true,
+      });
+
+      //* orbitControl ANCHOR
+      const controls = new OrbitControls(camera, canvasRef.current);
+      controls.enableDamping = true;
+      controls.autoRotate = true; // ANCHOR auto rotation OF full scene
+
+      //* RESOLVING PROBLEM OF PIXELS
+      const pixelRatio = Math.min(window.devicePixelRatio, 2);
+      renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      //*EventListener ANCHOR
+      window.addEventListener("resize", () => {
+        //* changing aspectRation of camera for handling dynamic window view ANCHOR
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        //* setting size of render graphics ANCHOR
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      //* Initialize clock ANCHOR
+      // const clock = new THREE.Clock();ANCHOR
+      // let prevTime=0;ANCHOR
+
+      const renderLoop = () => {
+        // const currTime = clock.getElapsedTime(); ANCHOR
+        // const delta = currTime-prevTime;ANCHOR
+        // prevTime=currTime;ANCHOR
+        // cubeMesh.rotation.y += THREE.MathUtils.degToRad(1)*delta*100;ANCHOR
+
+        controls.update();
+        //* Rendering  graphics  ANCHOR
+        renderer.render(scene, camera);
+        //*loop render for animation frame to match device frame rate ANCHOR
+        window.requestAnimationFrame(renderLoop);
+      };
+      renderLoop();
+    })();
+  }, []);
+
+  return (
+    <div>
+      <canvas ref={canvasRef} className="threejs w-full h-screen"></canvas>
+      {/* <div className="absolute select-none left-1/2 top-1/4 -translate-x-1/2   z-50">
+        <div className='flex flex-row justify-center w-[50vw] h-[50vh] bg-gradient-to-br from-black/30 via-black/30 to-black/30 p-6 rounded-4xl'>
+        <h1 className="  text-3xl font-bold  text-transparent bg-gradient-to-br from-white via-red-600 to-white bg-clip-text ">
+          This is Awesome
+        </h1>
+
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      </div> */}
     </div>
   );
 }
